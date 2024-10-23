@@ -1,24 +1,17 @@
 const http = require('http');
-
+const handleRoute = require('./routes');
 // Thiết lập địa chỉ IP và cổng || localhost
 const hostname = '127.0.0.1';
-const port = 3000;
+const port = 3001;
 
-// Tạo server
+
+// Tạo server req: Request, res: Response
 const server = http.createServer((req, res) => {
   // Thiết lập header cho response
   res.statusCode = 200;
-  res.setHeader('Content-Type', 'text/plain');
-
-  // Kiểm tra route
-  if (req.url === '/') {
-    res.end('Hello, World!!');
-  } else if (req.url === '/about') {
-    res.end('This is the About page');
-  } else {
-    res.statusCode = 404;
-    res.end('404 - Page Not Found');
-  }
+  res.setHeader('Content-Type', 'application/json');
+  // Import routes
+  handleRoute(req, res);
 });
 
 // Bắt đầu lắng nghe tại cổng đã chỉ định
