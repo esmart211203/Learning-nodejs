@@ -1,8 +1,6 @@
 const http = require('http');
-const handleRoute = require('./routes');
-// Thiết lập địa chỉ IP và cổng || localhost
-const hostname = '127.0.0.1';
-const port = 3001;
+const moduleOne = require('./config');
+const handleRoute = require('./routes/index');
 
 
 // Tạo server req: Request, res: Response
@@ -15,6 +13,6 @@ const server = http.createServer((req, res) => {
 });
 
 // Bắt đầu lắng nghe tại cổng đã chỉ định
-server.listen(port, hostname, () => {
-  console.log(`Server running at http://${hostname}:${port}/`);
+server.listen(moduleOne.port, moduleOne.hostname, () => {
+  console.log(`Hiii XuanTrongDev, I'm running at http://${moduleOne.hostname}:${moduleOne.port}/`);
 });

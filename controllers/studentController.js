@@ -1,6 +1,6 @@
 const model = require('../models/studentModel');
 const view = require('../views/index');
-
+const StudentModel = require('../models/studentModel');
 const parseBody = (req) => {
     return new Promise((resolve, reject) => {
         let body = '';
@@ -16,80 +16,87 @@ const parseBody = (req) => {
         });
     });
 };
-
-function getAllStudents(req, res){
-    const allStudents = model.getAllStudents();
-    res.setHeader('Content-Type', 'application/json');
-    res.end(view.renderStudents(allStudents));
-}
-
-function getStudentById(req, res) {
-    try {
-        const studentId = parseInt(req.params.studentId);
-        console.log("student id control", studentId);
-        const student = model.findStudentById(studentId);
-
-        if (student) {
+class StudentController {
+    getAllStudents = async (req, res) => {
+        try {
+            const allStudents = await StudentModel.findAll();
             res.setHeader('Content-Type', 'application/json');
-            res.end(view.renderStudent(student));
-        } else {
-            res.writeHead(404);
-            res.end(JSON.stringify({ message: 'Student not found!' }));
-        }
-    } catch (error) {
-        res.writeHead(400);
-        res.end(JSON.stringify({ message: 'Invalid request data' }));
-    }
-}
-
-async function createStudent(req, res){
-    try {
-        const body = await parseBody(req);
-        const newStudent = model.createStudent(body.name);
-        res.setHeader('Content-Type', 'application/json');
-        res.end(view.renderStudent(newStudent));
-    } catch (error) {
-        res.end(JSON.stringify({ message: 'Invalid data' }));
-    }
-}
-async function updateStudent(req, res) {
-    try {
-        const body = await parseBody(req);
-        const studentId = parseInt(req.params.studentId);
-        const isUpdated = model.updateStudent(studentId, body.newName);
-
-        if (isUpdated) {
-            const student = model.findStudentById(studentId);
-            res.setHeader('Content-Type', 'application/json');
-            res.end(view.renderStudent(student));
-        } else {
-            res.writeHead(404);
-            res.end(JSON.stringify({ message: 'Student not found!' }));
-        }
-    } catch (error) {
-        res.writeHead(400);  // Thêm mã trạng thái lỗi
-        res.end(JSON.stringify({ message: 'Invalid data' }));
-    }
-}
-
-function deleteStudent(req, res) {
-    try {
-        const studentId = parseInt(req.params.studentId);
-        const student = model.deleteStudent(studentId);
-
-        if (student) {
-            res.setHeader('Content-Type', 'application/json');
-            const allStudents = model.getAllStudents();
             res.end(view.renderStudents(allStudents));
-        } else {
-            res.writeHead(404);
-            res.end(JSON.stringify({ message: 'Student not found!' }));
+        } catch (error) {
+            res.statusCode = 500; 
+            res.end(JSON.stringify({ message: 'Internal server error' }));
         }
-    } catch (error) {
-        res.writeHead(400);
-        res.end(JSON.stringify({ message: 'Invalid request data' }));
+    }
+      
+    getStudentById = async (req, res) => {
+        try { 
+            const studentId = req.params.studentId; 
+            const student = await StudentModel.findStudentById(studentId); 
+            if (student) {
+                res.setHeader('Content-Type', 'application/json');
+                res.end(view.renderStudent(student)); 
+            } else { 
+                res.writeHead(404); 
+                res.end(JSON.stringify({ message: 'Student not found!' })); 
+            } 
+        } catch (error) {
+            res.writeHead(400); 
+            res.end(JSON.stringify({ message: 'Invalid request data' })); 
+        } 
+    };
+
+    createStudent = async (req, res) => {
+        try {
+            const body = await parseBody(req);
+            console.log(body);
+            const newStudent = await StudentModel.createStudent(body.name, body.age, body.city);
+            
+            res.setHeader('Content-Type', 'application/json');
+            res.statusCode = 201; 
+            res.end(view.renderStudent(newStudent));
+        } catch (error) {
+            res.statusCode = 400;
+            res.end(JSON.stringify({ message: 'Invalid data' }));
+        }
+    };
+    
+    deleteStudentById = async (req, res) => {
+        try {
+            const studentId = req.params.studentId; 
+            const result = await StudentModel.deleteStudentById(studentId); 
+            if (result.success) {
+                res.setHeader('Content-Type', 'application/json');
+                res.statusCode = 200;
+                res.end(JSON.stringify({ message: result.message }));
+            } else {
+                res.statusCode = 404;
+                res.end(JSON.stringify({ message: result.message }));
+            }
+        } catch (error) {
+            console.error('Unexpected error:', error);
+            res.statusCode = 500; 
+            res.end(JSON.stringify({ message: 'Internal server error' }));
+        }
+    };
+
+    updateStudentById = async(req, res) =>{
+        try {
+            const body = await parseBody(req);
+            const studentId = req.params.studentId; 
+            const result = await StudentModel.updateStudentById(studentId, body.newName, body.newAge, body.newCity);
+            if (result.success) {
+                res.setHeader('Content-Type', 'application/json');
+                res.statusCode = 200;
+                res.end(JSON.stringify({ message: result.message }));
+            } else {
+                res.statusCode = 404;
+                res.end(JSON.stringify({ message: result.message }));
+            } 
+        } catch (error) {
+            res.statusCode = 500; 
+            res.end(JSON.stringify({ message: 'Internal server error' }));
+        }
     }
 }
 
-
-module.exports = {getAllStudents, createStudent, deleteStudent, getStudentById, updateStudent};
+module.exports = new StudentController();
